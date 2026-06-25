@@ -1,0 +1,25 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+
+# Virtuelle Umgebungen / Virtual environments
+.venv/
+venv/
+env/
+
+# PyInstaller-Build-Artefakte / build artifacts
+build/
+dist/
+*.spec
+
+# Service-Laufzeitdaten / runtime data
+.youtube_intake/
+service.info
+
+# OS / Editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
