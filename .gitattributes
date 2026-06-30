@@ -1,0 +1,19 @@
+# Zeilenenden festnageln (LF), unabhaengig von core.autocrlf.
+# Standard: Git erkennt Text automatisch und normalisiert auf LF im Repo.
+* text=auto eol=lf
+
+# Explizit fuer die relevanten Textformate.
+*.py   text eol=lf
+*.md   text eol=lf
+*.json text eol=lf
+*.js   text eol=lf
+*.yml  text eol=lf
+*.yaml text eol=lf
+*.toml text eol=lf
+*.txt  text eol=lf
+
+# Binaerdateien nie anfassen.
+*.png  binary
+*.jpg  binary
+*.ico  binary
+*.exe  binary
