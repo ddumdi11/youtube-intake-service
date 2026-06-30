@@ -15,15 +15,16 @@ from youtube_transcript_api import (
     YouTubeTranscriptApi,
 )
 
-from .errors import STATUS_COMPLETE, STATUS_METADATA_ONLY
+from .errors import (
+    STATUS_COMPLETE,
+    STATUS_METADATA_ONLY,
+    InvalidURLError,
+    VideoUnavailableError,
+)
 from .formatting import format_duration
 from .markdown import build_markdown
 
 logger = logging.getLogger(__name__)
-
-
-class VideoUnavailableError(Exception):
-    """Raised when yt-dlp cannot retrieve the video (private, removed, geo-blocked)."""
 
 
 def extract_video_id(url: str) -> Optional[str]:
@@ -57,7 +58,7 @@ def _snippet_text(snippet: object) -> str:
 def get_video_info_and_transcript(url: str, language: str = "de") -> dict:
     video_id = extract_video_id(url)
     if not video_id:
-        raise ValueError(f"Ungültige YouTube-URL: {url}")
+        raise InvalidURLError(f"Ungültige YouTube-URL: {url}")
 
     ydl_opts = {"quiet": True, "no_warnings": True, "extract_flat": False}
 
@@ -88,6 +89,12 @@ def get_video_info_and_transcript(url: str, language: str = "de") -> dict:
         transcript_text = " ".join(
             _snippet_text(snippet).strip() for snippet in entries if _snippet_text(snippet).strip()
         )
+        # O5: Sprach-Fallback transparent machen (kein neues Feld, nur warnings).
+        actual_language = getattr(transcript_obj, "language_code", None)
+        if actual_language and actual_language != language:
+            warnings.append(
+                f"Transkript-Sprache: {actual_language} (Fallback von {language})"
+            )
     except (TranscriptsDisabled, NoTranscriptFound, StopIteration) as exc:
         message = f"Kein passendes Transkript gefunden: {exc}"
         logger.warning(message)

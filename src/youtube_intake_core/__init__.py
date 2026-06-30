@@ -12,10 +12,12 @@ from .errors import (
     STATUS_COMPLETE,
     STATUS_ERROR,
     STATUS_METADATA_ONLY,
+    IntakeError,
+    InvalidURLError,
+    VideoUnavailableError,
     error_payload,
 )
 from .extraction import (
-    VideoUnavailableError,
     build_thumbnail_urls,
     extract_video_id,
 )
@@ -28,6 +30,8 @@ __version__ = "1.0.0"
 __all__ = [
     "process",
     "__version__",
+    "IntakeError",
+    "InvalidURLError",
     "VideoUnavailableError",
     "extract_video_id",
     "build_thumbnail_urls",
