@@ -260,7 +260,9 @@ def create_app(controller: IdleShutdownController) -> FastAPI:
         language: str = Query("de", min_length=2, max_length=10),
     ):
         try:
+            _t0 = time.monotonic()
             result = await asyncio.to_thread(get_video_info_and_transcript, url, language)
+            logger.debug("process %.2fs %s", time.monotonic() - _t0, url)
         except ValueError as exc:
             return JSONResponse(status_code=400, content=error_payload("invalid_url", str(exc)))
         except VideoUnavailableError as exc:
