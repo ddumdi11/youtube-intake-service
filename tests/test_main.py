@@ -5,23 +5,19 @@ deterministisch laufen. Getestet werden Dauer-Formatierung (Schritt 1) sowie
 Status-/Fehlerfelder (Schritt 2).
 """
 
-import sys
-from pathlib import Path
-
 import pytest
 
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-
-import main  # noqa: E402
-from main import (  # noqa: E402
+from youtube_intake_core import (
     VideoUnavailableError,
     error_payload,
     extract_video_id,
     format_duration,
-    get_video_info_and_transcript,
 )
-from yt_dlp.utils import DownloadError  # noqa: E402
-from youtube_transcript_api import NoTranscriptFound  # noqa: E402
+from youtube_intake_core import extraction  # Patch-Ziel fuer yt_dlp / YouTubeTranscriptApi
+from youtube_intake_core import process as get_video_info_and_transcript
+from youtube_intake_server import IdleShutdownController, create_app
+from yt_dlp.utils import DownloadError
+from youtube_transcript_api import NoTranscriptFound
 
 
 # --- Schritt 1: Dauer-Formatierung -----------------------------------------
@@ -81,7 +77,7 @@ class _FakeTranscriptApi:
 
 
 def _patch_ydl(monkeypatch, ydl_cls=_FakeYDL):
-    monkeypatch.setattr(main.yt_dlp, "YoutubeDL", lambda *a, **k: ydl_cls())
+    monkeypatch.setattr(extraction.yt_dlp, "YoutubeDL", lambda *a, **k: ydl_cls())
 
 
 # --- Schritt 2: Status-/Fehlerfelder ---------------------------------------
@@ -93,7 +89,7 @@ def test_invalid_url_raises_value_error():
 
 def test_complete_status_with_transcript(monkeypatch):
     _patch_ydl(monkeypatch)
-    monkeypatch.setattr(main, "YouTubeTranscriptApi", _FakeTranscriptApi)
+    monkeypatch.setattr(extraction, "YouTubeTranscriptApi",_FakeTranscriptApi)
 
     result = get_video_info_and_transcript("https://youtu.be/GILJNcoJ7O0", "de")
 
@@ -117,7 +113,7 @@ def test_metadata_only_when_no_transcript(monkeypatch):
         def list(self, video_id):
             raise NoTranscriptFound(video_id, ["de"], [])
 
-    monkeypatch.setattr(main, "YouTubeTranscriptApi", _NoTranscriptApi)
+    monkeypatch.setattr(extraction, "YouTubeTranscriptApi",_NoTranscriptApi)
 
     result = get_video_info_and_transcript("https://youtu.be/GILJNcoJ7O0", "de")
 
@@ -154,8 +150,8 @@ def test_error_payload_shape():
 def _make_client():
     from fastapi.testclient import TestClient
 
-    controller = main.IdleShutdownController(60)
-    return TestClient(main.create_app(controller))
+    controller = IdleShutdownController(60)
+    return TestClient(create_app(controller))
 
 
 def test_health_endpoint():
