@@ -8,6 +8,8 @@ Status-/Fehlerfelder (Schritt 2).
 import pytest
 
 from youtube_intake_core import (
+    IntakeError,
+    InvalidURLError,
     VideoUnavailableError,
     error_payload,
     extract_video_id,
@@ -82,9 +84,26 @@ def _patch_ydl(monkeypatch, ydl_cls=_FakeYDL):
 
 # --- Schritt 2: Status-/Fehlerfelder ---------------------------------------
 
-def test_invalid_url_raises_value_error():
-    with pytest.raises(ValueError):
+def test_invalid_url_raises_invalid_url_error():
+    # Neuer Raise-Vertrag: kein dict, sondern InvalidURLError (IntakeError) mit error_code.
+    with pytest.raises(InvalidURLError) as excinfo:
         get_video_info_and_transcript("https://example.com/no-id")
+    assert isinstance(excinfo.value, IntakeError)
+    assert excinfo.value.error_code == "invalid_url"
+
+
+def test_video_unavailable_error_contract(monkeypatch):
+    # Nicht existierende/unverfuegbare ID -> VideoUnavailableError (IntakeError) mit error_code.
+    class _FailingYDL(_FakeYDL):
+        def extract_info(self, url, download=False):
+            raise DownloadError("Video unavailable")
+
+    _patch_ydl(monkeypatch, _FailingYDL)
+
+    with pytest.raises(VideoUnavailableError) as excinfo:
+        get_video_info_and_transcript("https://youtu.be/AAAAAAAAAAA", "de")
+    assert isinstance(excinfo.value, IntakeError)
+    assert excinfo.value.error_code == "video_unavailable"
 
 
 def test_complete_status_with_transcript(monkeypatch):
