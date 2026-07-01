@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "youtube-intake-service"
+version = "1.0.0"
+description = "Local YouTube intake service: metadata + transcript extraction with a FastAPI daemon."
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "Thorsten Diederichs" }]
+dependencies = [
+    "yt-dlp>=2025.1.0",
+    "youtube-transcript-api>=1.1.0",
+]
+
+[project.optional-dependencies]
+server = ["fastapi", "uvicorn[standard]"]
+dev = ["pytest"]
+build = ["pyinstaller>=6.0,<7.0"]
+
+[project.scripts]
+youtube-intake-service = "youtube_intake_server:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
